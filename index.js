@@ -103,7 +103,7 @@ app.post(
   }
 );
 
-app.get('/me', (req, res) => {
+app.get('/user', (req, res) => {
   res.status(200).json(req.user || null);
 });
 
