@@ -44,10 +44,11 @@ app.use(passport.session());
 
 passport.use(
   new LocalStrategy(function (username, password, done) {
-    const user = users.find(
-      (u) => u.username === username && u.password === password
-    );
+    const user = users.find((u) => u.username === username);
     if (!user) {
+      return done(null, false);
+    }
+    if (user.password !== password) {
       return done(null, false);
     }
     return done(null, user);
@@ -80,7 +81,7 @@ app.post('/register', (req, res, next) => {
   const user = { id: nextUserId, username, password };
   nextUserId++;
   users.push(user);
-  passport.authenticate('local', { failureFlash: true })(req, res, () => {
+  passport.authenticate('local')(req, res, () => {
     req.session.save((err) => {
       if (err) {
         return next(err);
@@ -90,18 +91,15 @@ app.post('/register', (req, res, next) => {
   });
 });
 
-app.post(
-  '/login',
-  passport.authenticate('local', { failureFlash: true }),
-  (req, res, next) => {
-    req.session.save((err) => {
-      if (err) {
-        return next(err);
-      }
-      res.status(200).json(req.user || null);
-    });
-  }
-);
+app.post('/login', passport.authenticate('local'), (req, res, next) => {
+  req.session.save((err) => {
+    if (err) {
+      console.log('yooooo', err);
+      return next(err);
+    }
+    res.status(200).json(req.user || null);
+  });
+});
 
 app.get('/user', (req, res) => {
   res.status(200).json(req.user || null);
